@@ -111,16 +111,17 @@ function Index() {
             <Sparkles className="h-3.5 w-3.5 text-mint" />
             Google Maps company intelligence
           </span>
-          <h1 className="mt-6 text-5xl leading-[1.05] font-bold md:text-6xl">
+          <h1 className="mt-6 text-4xl leading-[1.15] font-bold tracking-tight text-balance sm:text-5xl md:text-6xl">
             Find every company,
             <br />
-            <span className="bg-gradient-to-r from-primary to-mint bg-clip-text text-transparent">
+            <span className="inline-block bg-gradient-to-r from-primary to-mint bg-clip-text pb-1 text-transparent">
               city by city.
             </span>
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
+          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
             Search by location, by category, or both — then export a clean lead list to CSV or Excel in one click.
           </p>
+
         </header>
 
         {/* Search */}
