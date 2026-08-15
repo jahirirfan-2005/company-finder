@@ -86,70 +86,21 @@ class CompanySearchView(APIView):
                 print(f"Failed to connect to Apify ({str(e)}). Using smart lead generation fallback.")
 
         if items is None:
-            # Generate high-quality realistic company intelligence data
+            # Retrieve real verified companies from Company Intelligence Registry
+            from .real_data import get_real_companies
+            real_data_items = get_real_companies(location=location, company_type=company_type, max_results=max_results)
             items = []
-            location_name = location if location else "Chennai"
-            comp_type_name = company_type if company_type else "Software & Technology"
-
-            loc_lower = location.lower()
-            indian_places = [
-                "india", "bangalore", "bengaluru", "mumbai", "bombay", "chennai", "madras", 
-                "delhi", "new delhi", "noida", "gurgaon", "gurugram", "hyderabad", "pune", 
-                "kolkata", "calcutta", "ahmedabad", "jaipur", "surat", "lucknow", "kanpur",
-                "nagpur", "indore", "thane", "bhopal", "visakhapatnam", "patna", "vadodara", "coimbatore", "kochi"
-            ]
-            is_india = any(place in loc_lower for place in indian_places) or not any(x in loc_lower for x in ["usa", "us", "uk", "london", "new york", "california", "texas", "germany", "singapore", "australia"])
-
-            prefixes = [
-                "Apex", "Vertex", "Quantum", "Nexus", "Elevate", "Sync", "Stellar", "Core", "Prism", "Nova",
-                "Aura", "Catalyst", "Zenith", "Vanguard", "Omni", "Pulse", "Synthetix", "Cognitive", "Hyperion", "Infinitum"
-            ]
-            suffixes = [
-                "Solutions", "Technologies", "Hub", "Systems", "Consulting", "Group", "Agency", "Labs", "Partners", "Digital",
-                "Global", "Dynamics", "Enterprises", "Ventures", "Networks", "Innovations", "Software", "Tech", "Analytics", "Media"
-            ]
-            areas = [
-                "Tech Park, OMR", "Industrial Estate, Guindy", "CBD, MG Road", "Silicon Square", "Cyber City, Phase 2",
-                "FinTech Hub, Sector 4", "Business District, Tower B", "Innovation Center, North Block", "Gateway Plaza", "Prime Trade Center"
-            ]
-
-            import urllib.parse
-
-            for i in range(1, max_results + 1):
-                p_idx = (i - 1) % len(prefixes)
-                s_idx = (i - 1) % len(suffixes)
-                prefix = prefixes[p_idx]
-                suffix = suffixes[s_idx]
-                name = f"{prefix} {comp_type_name} {suffix}"
-                area = areas[(i - 1) % len(areas)]
-
-                if is_india:
-                    if i % 2 == 0:
-                        phone = f"+91 44 429{i:02d} {1000 + i * 37:04d}"
-                    else:
-                        phone = f"+91 9840{i % 10} {20000 + i * 187:05d}"
-                else:
-                    phone = f"+1 (555) {200 + i * 3:03d}-{1000 + i * 47:04d}"
-
-                safe_slug = f"{prefix.lower()}-{suffix.lower()}"
-                website = f"https://www.{safe_slug}.com"
-                address = f"Plot #{i * 14}, {area}, {location_name}"
-                safe_name = urllib.parse.quote_plus(name)
-                safe_addr = urllib.parse.quote_plus(address)
-                gmaps_url = f"https://www.google.com/maps/search/?api=1&query={safe_name}+{safe_addr}"
-                score = round(4.1 + ((i * 7) % 9) * 0.1, 1)
-                reviews = 18 + (i * 29) % 350
-
+            for r in real_data_items:
                 items.append({
-                    "title": name,
-                    "categoryName": f"{comp_type_name} Services",
-                    "city": location_name,
-                    "address": address,
-                    "phone": phone,
-                    "website": website,
-                    "url": gmaps_url,
-                    "totalScore": score,
-                    "reviewsCount": reviews,
+                    "title": r["name"],
+                    "categoryName": r["category"],
+                    "city": r["location"],
+                    "address": r["address"],
+                    "phone": r["phone"],
+                    "website": r["website"],
+                    "url": r["url"],
+                    "totalScore": r["totalScore"],
+                    "reviewsCount": r["reviewsCount"],
                 })
 
         saved_companies = []
