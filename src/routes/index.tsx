@@ -62,7 +62,7 @@ function ErrorBoundary({ error }: { error: Error }) {
 }
 Route.options.errorComponent = ErrorBoundary;
 
-export function Index() {
+function Index() {
   const run = useServerFn(searchCompanies);
   const [location, setLocation] = useState("chennai");
   const [companyType, setCompanyType] = useState("IT");
