@@ -1,5 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState, useId } from "react";
+import { useState, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   Check,
   LayoutGrid,
   Table as TableIcon,
+  FolderTree,
   ShieldCheck,
   Zap,
   Download,
@@ -27,25 +28,33 @@ import {
   ArrowUpRight,
   SlidersHorizontal,
   X,
-  Share2,
   Navigation,
   Compass,
+  Laptop,
+  Stethoscope,
+  Landmark,
+  Car,
+  Scale,
+  Building,
+  Megaphone,
+  GraduationCap,
+  Layers,
 } from "lucide-react";
 import { searchCompanies, type Company } from "@/lib/search-companies.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Company Scout — Real Google Maps Intelligence & B2B Lead Engine" },
+      { title: "Company Scout — Real Category & Location-Based Company Intelligence" },
       {
         name: "description",
         content:
-          "Find verified real companies, city by city. Search location-accurate business leads with verified phone numbers, websites, and addresses. Export to CSV & Excel.",
+          "Find verified real companies category-wise and location-wise. Real street addresses, phone numbers, websites, and instant spreadsheet exports.",
       },
-      { property: "og:title", content: "Company Scout — Verified B2B Company Intelligence" },
+      { property: "og:title", content: "Company Scout — Real Category & Location B2B Intelligence" },
       {
         property: "og:description",
-        content: "Search companies by location & category. Export clean, verified lead lists in one click.",
+        content: "Search real companies category-wise by location. Export clean lead lists in one click.",
       },
     ],
   }),
@@ -71,38 +80,71 @@ function ErrorBoundary({ error }: { error: Error }) {
 }
 Route.options.errorComponent = ErrorBoundary;
 
+// Standard Category Directory Cards
+const CATEGORY_DIRECTORY = [
+  { id: "all", name: "All Categories", icon: Layers, query: "", color: "from-blue-500 to-indigo-500" },
+  { id: "tech", name: "IT & Software", icon: Laptop, query: "Software", color: "from-blue-500 to-cyan-500" },
+  { id: "health", name: "Healthcare & Hospitals", icon: Stethoscope, query: "Hospital", color: "from-emerald-500 to-teal-500" },
+  { id: "finance", name: "Banking & FinTech", icon: Landmark, query: "Finance", color: "from-purple-500 to-pink-500" },
+  { id: "auto", name: "Automotive & Manufacturing", icon: Car, query: "Automotive", color: "from-amber-500 to-orange-500" },
+  { id: "legal", name: "Legal & Law Firms", icon: Scale, query: "Law", color: "from-rose-500 to-red-500" },
+  { id: "realestate", name: "Real Estate & Builders", icon: Building, query: "Real Estate", color: "from-sky-500 to-blue-600" },
+  { id: "marketing", name: "Marketing & Media", icon: Megaphone, query: "Marketing", color: "from-violet-500 to-purple-600" },
+  { id: "edu", name: "Education & Universities", icon: GraduationCap, query: "University", color: "from-yellow-500 to-amber-600" },
+];
+
+function normalizeCategoryGroup(cat: string): string {
+  const c = (cat || "").toLowerCase();
+  if (c.includes("software") || c.includes("it") || c.includes("tech") || c.includes("cloud") || c.includes("saas") || c.includes("ai") || c.includes("digital") || c.includes("computer")) {
+    return "IT & Software";
+  }
+  if (c.includes("hospital") || c.includes("health") || c.includes("medical") || c.includes("clinic") || c.includes("pharma") || c.includes("doctor") || c.includes("biotech")) {
+    return "Healthcare & Hospitals";
+  }
+  if (c.includes("finance") || c.includes("bank") || c.includes("fintech") || c.includes("invest") || c.includes("capital") || c.includes("wealth") || c.includes("insurance")) {
+    return "Banking, Finance & FinTech";
+  }
+  if (c.includes("auto") || c.includes("vehicle") || c.includes("motor") || c.includes("manufacturing") || c.includes("tyre") || c.includes("industrial") || c.includes("engineering")) {
+    return "Automotive & Manufacturing";
+  }
+  if (c.includes("law") || c.includes("legal") || c.includes("attorney") || c.includes("advocate") || c.includes("solicitor")) {
+    return "Legal & Advisory";
+  }
+  if (c.includes("real estate") || c.includes("property") || c.includes("builder") || c.includes("construction") || c.includes("architect")) {
+    return "Real Estate & Construction";
+  }
+  if (c.includes("market") || c.includes("media") || c.includes("advertising") || c.includes("pr") || c.includes("creative")) {
+    return "Marketing & Media";
+  }
+  if (c.includes("school") || c.includes("college") || c.includes("university") || c.includes("education") || c.includes("academy") || c.includes("institute")) {
+    return "Education & Research";
+  }
+  return "General Commercial & Services";
+}
+
 function Index() {
   const run = useServerFn(searchCompanies);
-  const [location, setLocation] = useState("San Francisco");
-  const [companyType, setCompanyType] = useState("Software");
-  const [maxResults, setMaxResults] = useState(25);
+  const [location, setLocation] = useState("Chennai");
+  const [companyType, setCompanyType] = useState("");
+  const [maxResults, setMaxResults] = useState(30);
   const [results, setResults] = useState<Company[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "grouped" | "table">("grouped");
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [activeModalCompany, setActiveModalCompany] = useState<Company | null>(null);
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>("all");
 
   const quickSearches = [
-    { loc: "San Francisco", type: "Software" },
-    { loc: "Chennai", type: "IT Services" },
-    { loc: "Bangalore", type: "Tech Startups" },
-    { loc: "New York", type: "Investment Banking" },
-    { loc: "London", type: "Hospital & Healthcare" },
-    { loc: "Austin", type: "CleanTech" },
-  ];
-
-  const categoryPresets = [
-    "Software",
-    "IT Services",
-    "FinTech",
-    "Hospital",
-    "Law Firms",
-    "Marketing",
-    "Automotive",
-    "Biotech",
+    { loc: "Chennai", label: "Chennai All Sectors", type: "" },
+    { loc: "Bangalore", label: "Bangalore Tech & FinTech", type: "Tech" },
+    { loc: "Mumbai", label: "Mumbai Banking & Auto", type: "Banking" },
+    { loc: "Hyderabad", label: "Hyderabad IT & Pharma", type: "Pharma" },
+    { loc: "San Francisco", label: "Silicon Valley Tech", type: "Software" },
+    { loc: "New York", label: "New York Finance & Health", type: "Finance" },
+    { loc: "London", label: "London Healthcare & FinTech", type: "Hospital" },
   ];
 
   async function handleSearch(e?: React.FormEvent, customLoc?: string, customType?: string, customMax?: number) {
@@ -113,13 +155,14 @@ function Index() {
 
     setError(null);
     if (!targetLoc && !targetType) {
-      setError("Please enter a location, a company type, or both.");
+      setError("Please enter a location, a company category, or both.");
       return;
     }
 
     setLoading(true);
     setSearched(true);
     setSelectedIndices(new Set());
+    setActiveCategoryFilter("all");
 
     try {
       const data = await run({
@@ -138,6 +181,33 @@ function Index() {
     }
   }
 
+  // Derive unique categories present in the current results
+  const categoryStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const r of results) {
+      const group = normalizeCategoryGroup(r.category);
+      counts[group] = (counts[group] || 0) + 1;
+    }
+    return counts;
+  }, [results]);
+
+  // Filter results by active category tab if selected
+  const filteredResults = useMemo(() => {
+    if (activeCategoryFilter === "all") return results;
+    return results.filter((r) => normalizeCategoryGroup(r.category) === activeCategoryFilter);
+  }, [results, activeCategoryFilter]);
+
+  // Grouped results for the "Grouped Category View"
+  const groupedResults = useMemo(() => {
+    const groups: Record<string, { company: Company; originalIndex: number }[]> = {};
+    results.forEach((c, idx) => {
+      const group = normalizeCategoryGroup(c.category);
+      if (!groups[group]) groups[group] = [];
+      groups[group].push({ company: c, originalIndex: idx });
+    });
+    return groups;
+  }, [results]);
+
   function toggleSelectAll() {
     if (selectedIndices.size === results.length) {
       setSelectedIndices(new Set());
@@ -155,7 +225,7 @@ function Index() {
 
   function copyLead(c: Company, idx: number, e?: React.MouseEvent) {
     if (e) e.stopPropagation();
-    const text = `${c.name}\nIndustry: ${c.category}\nLocation: ${c.location}\nAddress: ${c.address}\nPhone: ${c.phone || "N/A"}\nWebsite: ${c.website || "N/A"}\nRating: ${c.rating ?? "N/A"} (${c.reviewsCount ?? 0} reviews)\nGoogle Maps: ${c.url}`;
+    const text = `${c.name}\nCategory: ${c.category}\nLocation: ${c.location}\nAddress: ${c.address}\nPhone: ${c.phone || "N/A"}\nWebsite: ${c.website || "N/A"}\nRating: ${c.rating ?? "N/A"} (${c.reviewsCount ?? 0} reviews)\nGoogle Maps: ${c.url}`;
     navigator.clipboard.writeText(text);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
@@ -164,10 +234,11 @@ function Index() {
   function getActiveExportData() {
     const targetList = selectedIndices.size > 0 
       ? results.filter((_, i) => selectedIndices.has(i))
-      : results;
+      : filteredResults;
     return targetList.map((c) => ({
       Name: c.name,
       Category: c.category,
+      CategoryGroup: normalizeCategoryGroup(c.category),
       Location: c.location,
       Address: c.address,
       Phone: c.phone,
@@ -184,7 +255,7 @@ function Index() {
     const csv = XLSX.utils.sheet_to_csv(ws);
     triggerDownload(
       new Blob([csv], { type: "text/csv;charset=utf-8;" }),
-      `companies-${location || "leads"}-${selectedIndices.size > 0 ? "selected" : "all"}.csv`
+      `companies-${location || "leads"}-${activeCategoryFilter !== "all" ? activeCategoryFilter : "all-categories"}.csv`
     );
   }
 
@@ -196,7 +267,7 @@ function Index() {
     const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     triggerDownload(
       new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
-      `companies-${location || "leads"}-${selectedIndices.size > 0 ? "selected" : "all"}.xlsx`
+      `companies-${location || "leads"}-${activeCategoryFilter !== "all" ? activeCategoryFilter : "all-categories"}.xlsx`
     );
   }
 
@@ -208,23 +279,41 @@ function Index() {
   }
 
   function getCategoryBadgeStyle(cat: string) {
-    const c = (cat || "").toLowerCase();
-    if (c.includes("software") || c.includes("it") || c.includes("tech") || c.includes("cloud") || c.includes("ai")) {
-      return "bg-blue-500/10 text-blue-400 border-blue-500/25";
+    const group = normalizeCategoryGroup(cat);
+    switch (group) {
+      case "IT & Software":
+        return "bg-blue-500/10 text-blue-400 border-blue-500/25";
+      case "Healthcare & Hospitals":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/25";
+      case "Banking, Finance & FinTech":
+        return "bg-purple-500/10 text-purple-400 border-purple-500/25";
+      case "Automotive & Manufacturing":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/25";
+      case "Legal & Advisory":
+        return "bg-rose-500/10 text-rose-400 border-rose-500/25";
+      case "Real Estate & Construction":
+        return "bg-sky-500/10 text-sky-400 border-sky-500/25";
+      case "Marketing & Media":
+        return "bg-violet-500/10 text-violet-400 border-violet-500/25";
+      case "Education & Research":
+        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/25";
+      default:
+        return "bg-slate-500/10 text-slate-300 border-slate-700";
     }
-    if (c.includes("hospital") || c.includes("health") || c.includes("medical") || c.includes("clinic") || c.includes("pharma")) {
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/25";
+  }
+
+  function getCategoryIcon(group: string) {
+    switch (group) {
+      case "IT & Software": return Laptop;
+      case "Healthcare & Hospitals": return Stethoscope;
+      case "Banking, Finance & FinTech": return Landmark;
+      case "Automotive & Manufacturing": return Car;
+      case "Legal & Advisory": return Scale;
+      case "Real Estate & Construction": return Building;
+      case "Marketing & Media": return Megaphone;
+      case "Education & Research": return GraduationCap;
+      default: return Building2;
     }
-    if (c.includes("finance") || c.includes("bank") || c.includes("fintech") || c.includes("invest")) {
-      return "bg-purple-500/10 text-purple-400 border-purple-500/25";
-    }
-    if (c.includes("auto") || c.includes("vehicle") || c.includes("motor") || c.includes("manufacturing")) {
-      return "bg-amber-500/10 text-amber-400 border-amber-500/25";
-    }
-    if (c.includes("law") || c.includes("legal")) {
-      return "bg-rose-500/10 text-rose-400 border-rose-500/25";
-    }
-    return "bg-slate-500/10 text-slate-300 border-slate-700";
   }
 
   return (
@@ -235,7 +324,7 @@ function Index() {
       <div className="ambient-glow top-[65%] -right-40 h-[450px] w-[550px] bg-teal-600/10" />
 
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#080c15]/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#080c15]/85 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-teal-400 text-white shadow-lg shadow-blue-500/20">
@@ -245,7 +334,7 @@ function Index() {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold tracking-tight text-white">Company<span className="text-blue-400">Scout</span></span>
                 <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-400 border border-blue-500/20">
-                  v2.5 PRO
+                  CATEGORY & LOCATION ENGINE
                 </span>
               </div>
             </div>
@@ -254,11 +343,10 @@ function Index() {
           <div className="hidden items-center gap-6 md:flex">
             <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live Geospatial Engine Active
+              100% Real Location & Category Data
             </span>
             <span className="text-xs text-slate-400">|</span>
-            <span className="text-xs text-slate-400">120+ Global Metros</span>
-            <span className="text-xs text-slate-400">Zero Fabricated Data</span>
+            <span className="text-xs text-slate-400">Verified Phone & Web Links</span>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -275,29 +363,29 @@ function Index() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 pb-24 pt-8 sm:px-6 lg:px-8">
         {/* Header Badge */}
         <div className="flex justify-center">
           <div className="glow-pill inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-blue-400 shadow-sm">
             <Sparkles className="h-3 w-3 text-teal-400" />
-            <span>Google Maps Real-Time Intelligence & Geospatial Registry</span>
+            <span>Category-Wise & Location-Based Real Intelligence</span>
           </div>
         </div>
 
         {/* Hero Headline */}
-        <div className="mt-5 text-center">
+        <div className="mt-4 text-center">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-            <span className="gradient-title block">Find every company,</span>
-            <span className="gradient-accent-text block">city by city.</span>
+            <span className="gradient-title block">Real Companies by Category,</span>
+            <span className="gradient-accent-text block">Location by Location.</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-xs sm:text-sm text-slate-400 font-normal leading-relaxed">
-            Search verified company headquarters and local branches worldwide. Get authentic street addresses, real phone numbers, official websites, and instant spreadsheet exports.
+          <p className="mx-auto mt-3 max-w-2xl text-xs sm:text-sm text-slate-400 font-normal leading-relaxed">
+            Explore verified real-world enterprises categorized by industry across major global cities. View authentic street addresses, direct phone numbers, official websites, and export to CSV or Excel.
           </p>
         </div>
 
         {/* Search Console Container */}
-        <div className="glass-panel-elevated mx-auto mt-8 max-w-4xl rounded-2xl p-4 sm:p-6 shadow-2xl">
-          <form onSubmit={(e) => handleSearch(e)} className="grid gap-3 sm:grid-cols-[1.2fr_1.2fr_100px_auto]">
+        <div className="glass-panel-elevated mx-auto mt-7 max-w-4xl rounded-2xl p-4 sm:p-6 shadow-2xl">
+          <form onSubmit={(e) => handleSearch(e)} className="grid gap-3 sm:grid-cols-[1.3fr_1.3fr_110px_auto]">
             {/* Location Input */}
             <div className="relative flex items-center">
               <MapPin className="absolute left-3.5 h-4 w-4 text-blue-400" />
@@ -305,7 +393,7 @@ function Index() {
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="City / Region (e.g. San Francisco, Chennai)"
+                placeholder="Location (e.g. Chennai, Bangalore, SF)"
                 className="glass-input h-11 w-full rounded-xl pl-10 pr-3 text-xs sm:text-sm outline-none placeholder:text-slate-500 font-normal"
               />
             </div>
@@ -317,7 +405,7 @@ function Index() {
                 type="text"
                 value={companyType}
                 onChange={(e) => setCompanyType(e.target.value)}
-                placeholder="Industry (e.g. Software, Hospital, Finance)"
+                placeholder="Category (e.g. IT, Hospital, Finance, or All)"
                 className="glass-input h-11 w-full rounded-xl pl-10 pr-3 text-xs sm:text-sm outline-none placeholder:text-slate-500 font-normal"
               />
             </div>
@@ -330,8 +418,8 @@ function Index() {
                 onChange={(e) => setMaxResults(Number(e.target.value))}
                 className="glass-input h-11 w-full appearance-none rounded-xl pl-8 pr-3 text-xs font-medium text-slate-200 outline-none cursor-pointer"
               >
-                <option value={10} className="bg-[#0f172a] text-white">10 Leads</option>
-                <option value={25} className="bg-[#0f172a] text-white">25 Leads</option>
+                <option value={15} className="bg-[#0f172a] text-white">15 Leads</option>
+                <option value={30} className="bg-[#0f172a] text-white">30 Leads</option>
                 <option value={50} className="bg-[#0f172a] text-white">50 Leads</option>
               </select>
             </div>
@@ -350,7 +438,7 @@ function Index() {
               ) : (
                 <>
                   <Search className="h-4 w-4" />
-                  <span>Search Leads</span>
+                  <span>Explore Leads</span>
                 </>
               )}
             </button>
@@ -364,103 +452,73 @@ function Index() {
             </div>
           )}
 
-          {/* Category Preset Tags */}
+          {/* Location Quick Presets */}
           <div className="mt-4 flex flex-wrap items-center gap-1.5 pt-3 border-t border-white/5">
-            <span className="text-[11px] font-semibold text-slate-400 mr-1">Quick Categories:</span>
-            {categoryPresets.map((cat, idx) => (
+            <span className="text-[11px] font-semibold text-slate-400 mr-1">Popular Locations:</span>
+            {quickSearches.map((item, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => {
-                  setCompanyType(cat);
-                  handleSearch(undefined, location, cat);
+                  setLocation(item.loc);
+                  setCompanyType(item.type);
+                  handleSearch(undefined, item.loc, item.type);
                 }}
                 className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition border ${
-                  companyType.toLowerCase() === cat.toLowerCase()
+                  location.toLowerCase() === item.loc.toLowerCase() && companyType.toLowerCase() === item.type.toLowerCase()
                     ? "bg-blue-600/20 text-blue-300 border-blue-500/40"
                     : "bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-200"
                 }`}
               >
-                {cat}
+                <MapPin className="mr-1 inline h-2.5 w-2.5 text-blue-400" />
+                <span>{item.loc}</span>
+                {item.type && <span className="ml-1 text-slate-500">({item.type})</span>}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Popular Locations Bar */}
-        {!searched && !loading && (
-          <div className="mx-auto mt-6 max-w-4xl">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Popular Metros</span>
-              <div className="flex flex-wrap gap-2">
-                {quickSearches.map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setLocation(item.loc);
-                      setCompanyType(item.type);
-                      handleSearch(undefined, item.loc, item.type);
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800/80 bg-slate-900/60 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-blue-500/40 hover:bg-slate-800 hover:text-white"
-                  >
-                    <MapPin className="h-3 w-3 text-blue-400" />
-                    <span>{item.loc}</span>
-                    <span className="text-slate-500 font-normal">({item.type})</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Live Metrics Strip */}
-        <div className="mx-auto mt-12 grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="glass-panel flex flex-col justify-between rounded-xl p-4">
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-medium">Metros Covered</span>
-              <Globe className="h-4 w-4 text-blue-400" />
-            </div>
-            <div className="mt-2">
-              <div className="text-xl font-bold text-white tracking-tight">120+ Hubs</div>
-              <div className="text-[11px] text-slate-400">US, UK, India, EU, Asia</div>
-            </div>
+        {/* Category Directory Browser Cards (Instant 1-Click Category Filter) */}
+        <div className="mx-auto mt-7 max-w-5xl">
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <FolderTree className="h-3.5 w-3.5 text-blue-400" />
+              <span>Browse by Category in {location || "Selected City"}</span>
+            </h2>
+            <span className="text-[11px] text-slate-500">Click any category to search instantly</span>
           </div>
 
-          <div className="glass-panel flex flex-col justify-between rounded-xl p-4">
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-medium">Real Data Standard</span>
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
-            </div>
-            <div className="mt-2">
-              <div className="text-xl font-bold text-white tracking-tight">100% Real</div>
-              <div className="text-[11px] text-slate-400">Zero dummy / fake numbers</div>
-            </div>
-          </div>
-
-          <div className="glass-panel flex flex-col justify-between rounded-xl p-4">
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-medium">Search Latency</span>
-              <Zap className="h-4 w-4 text-amber-400" />
-            </div>
-            <div className="mt-2">
-              <div className="text-xl font-bold text-white tracking-tight">&lt; 1.2s</div>
-              <div className="text-[11px] text-slate-400">Memory & live geospatial</div>
-            </div>
-          </div>
-
-          <div className="glass-panel flex flex-col justify-between rounded-xl p-4">
-            <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-medium">CRM Export</span>
-              <Download className="h-4 w-4 text-teal-400" />
-            </div>
-            <div className="mt-2">
-              <div className="text-xl font-bold text-white tracking-tight">CSV & Excel</div>
-              <div className="text-[11px] text-slate-400">Ready for outreach</div>
-            </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {CATEGORY_DIRECTORY.slice(1).map((cat) => {
+              const Icon = cat.icon;
+              const isSelected = companyType.toLowerCase() === cat.query.toLowerCase() && cat.query !== "";
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    setCompanyType(cat.query);
+                    handleSearch(undefined, location, cat.query);
+                  }}
+                  className={`glass-panel group relative flex items-center gap-2.5 rounded-xl p-2.5 text-left transition hover:-translate-y-0.5 hover:border-blue-500/50 ${
+                    isSelected ? "border-blue-500 bg-blue-950/30 text-white" : "text-slate-300"
+                  }`}
+                >
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr ${cat.color} text-white shadow-sm`}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-semibold truncate group-hover:text-blue-300 transition-colors">
+                      {cat.name}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Loading Spinner State */}
+        {/* Loading Spinner */}
         {loading && (
           <div className="glass-panel-elevated mx-auto mt-12 flex max-w-lg flex-col items-center justify-center gap-3.5 rounded-2xl p-10 text-center shadow-2xl">
             <div className="relative flex h-14 w-14 items-center justify-center">
@@ -468,9 +526,9 @@ function Index() {
               <div className="h-10 w-10 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-white">Aggregating Verified Company Leads</h3>
+              <h3 className="text-base font-semibold text-white">Aggregating Category-Wise Real Intelligence</h3>
               <p className="mt-1 text-xs text-slate-400 font-normal">
-                Querying verified geospatial registries and Google Maps coordinates for {location || "target region"}...
+                Querying verified local company registries for {companyType || "all categories"} in {location || "all cities"}...
               </p>
             </div>
           </div>
@@ -478,7 +536,7 @@ function Index() {
 
         {/* Search Results Area */}
         {!loading && results.length > 0 && (
-          <div className="mt-12 space-y-4">
+          <div className="mt-10 space-y-4">
             {/* Results Action Bar */}
             <div className="glass-panel flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between shadow-lg">
               <div className="flex items-center gap-3">
@@ -496,7 +554,7 @@ function Index() {
                 </button>
                 <div>
                   <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                    Found {results.length} Verified Leads
+                    Found {filteredResults.length} Real Leads
                     {selectedIndices.size > 0 && (
                       <span className="ml-2 text-xs font-medium text-blue-400">
                         ({selectedIndices.size} selected)
@@ -504,15 +562,25 @@ function Index() {
                     )}
                   </h2>
                   <p className="text-[11px] text-slate-400">
-                    Results for <span className="text-blue-400 font-medium">{companyType || "all industries"}</span> in{" "}
-                    <span className="text-teal-400 font-medium">{location || "global"}</span>
+                    Location: <span className="text-teal-400 font-medium">{location || "All Metros"}</span>
+                    {companyType && <> • Category: <span className="text-blue-400 font-medium">{companyType}</span></>}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                {/* View Switcher */}
+                {/* View Switcher: Grouped vs Grid vs Table */}
                 <div className="flex items-center rounded-lg border border-slate-800 bg-slate-900/80 p-0.5">
+                  <button
+                    onClick={() => setViewMode("grouped")}
+                    className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                      viewMode === "grouped" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-slate-200"
+                    }`}
+                    title="Category-Wise Grouped View"
+                  >
+                    <FolderTree className="h-3.5 w-3.5" />
+                    <span>Category Wise</span>
+                  </button>
                   <button
                     onClick={() => setViewMode("grid")}
                     className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition ${
@@ -572,132 +640,114 @@ function Index() {
               </div>
             </div>
 
-            {/* View Mode 1: Interactive Cards */}
-            {viewMode === "grid" && (
-              <div className="grid gap-3.5 md:grid-cols-2 lg:grid-cols-3">
-                {results.map((c, i) => {
-                  const isSelected = selectedIndices.has(i);
+            {/* Dynamic Category Filter Pills (When multiple categories exist) */}
+            {Object.keys(categoryStats).length > 1 && (
+              <div className="flex flex-wrap items-center gap-2 p-1">
+                <button
+                  onClick={() => setActiveCategoryFilter("all")}
+                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition border ${
+                    activeCategoryFilter === "all"
+                      ? "bg-blue-600 text-white border-blue-500 shadow-sm"
+                      : "bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700"
+                  }`}
+                >
+                  All Categories ({results.length})
+                </button>
+                {Object.entries(categoryStats).map(([catGroup, count]) => {
+                  const Icon = getCategoryIcon(catGroup);
+                  const isActive = activeCategoryFilter === catGroup;
                   return (
-                    <div
-                      key={i}
-                      onClick={() => setActiveModalCompany(c)}
-                      className={`glass-panel group relative flex flex-col justify-between rounded-xl p-4.5 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-blue-500/50 ${
-                        isSelected ? "border-blue-500/60 bg-blue-950/15" : ""
+                    <button
+                      key={catGroup}
+                      onClick={() => setActiveCategoryFilter(isActive ? "all" : catGroup)}
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition border ${
+                        isActive
+                          ? "bg-blue-600 text-white border-blue-500 shadow-sm"
+                          : "bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700"
                       }`}
                     >
-                      <div>
-                        <div className="flex items-start justify-between gap-2.5">
-                          <div className="flex items-start gap-2.5">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleSelect(i)}
-                              onClick={(e) => e.stopPropagation()}
-                              className="mt-1 h-3.5 w-3.5 rounded accent-blue-600 cursor-pointer"
-                            />
-                            <div>
-                              <div className="flex items-center gap-1.5">
-                                <h3 className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors tracking-tight leading-snug">
-                                  {c.name}
-                                </h3>
-                                <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 shrink-0" />
-                              </div>
-                              {c.category && (
-                                <span className={`mt-1.5 inline-block rounded-md px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase border ${getCategoryBadgeStyle(c.category)}`}>
-                                  {c.category}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={(e) => copyLead(c, i, e)}
-                            title="Copy lead dossier"
-                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-                          >
-                            {copiedIndex === i ? (
-                              <Check className="h-3.5 w-3.5 text-teal-400" />
-                            ) : (
-                              <Copy className="h-3.5 w-3.5" />
-                            )}
-                          </button>
-                        </div>
-
-                        {/* Address */}
-                        <div className="mt-3 flex items-start gap-2 text-xs text-slate-400 font-normal">
-                          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-                          <span className="line-clamp-2 leading-relaxed">{c.address || c.location}</span>
-                        </div>
-
-                        {/* Phone */}
-                        {c.phone && (
-                          <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-300 font-normal">
-                            <Phone className="h-3.5 w-3.5 shrink-0 text-teal-400" />
-                            <a
-                              href={`tel:${c.phone}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="hover:underline hover:text-white"
-                            >
-                              {c.phone}
-                            </a>
-                          </div>
-                        )}
-
-                        {/* Website */}
-                        {c.website && (
-                          <div className="mt-1.5 flex items-center gap-2 text-xs text-blue-400 font-medium">
-                            <Globe className="h-3.5 w-3.5 shrink-0 text-blue-400" />
-                            <a
-                              href={c.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="truncate hover:underline"
-                            >
-                              {c.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                            </a>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Card Footer: Rating & Maps link */}
-                      <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-2.5 text-xs">
-                        <div className="flex items-center gap-1.5">
-                          {c.rating != null ? (
-                            <>
-                              <div className="flex items-center text-amber-400">
-                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                                <span className="ml-1 font-semibold text-slate-200">{c.rating}</span>
-                              </div>
-                              {c.reviewsCount != null && (
-                                <span className="text-slate-500 text-[11px]">({c.reviewsCount})</span>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-slate-500 text-[11px]">Verified Place</span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={c.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 font-medium text-xs text-teal-400 hover:text-teal-300 transition-colors"
-                          >
-                            <span>Maps</span>
-                            <ArrowUpRight className="h-3 w-3" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
+                      <Icon className="h-3 w-3" />
+                      <span>{catGroup}</span>
+                      <span className="rounded-full bg-white/10 px-1.5 py-0.2 text-[10px] font-bold">
+                        {count}
+                      </span>
+                    </button>
                   );
                 })}
               </div>
             )}
 
-            {/* View Mode 2: Enterprise Data Table */}
+            {/* VIEW MODE 1: Category-Wise Grouped View */}
+            {viewMode === "grouped" && (
+              <div className="space-y-6">
+                {Object.entries(groupedResults)
+                  .filter(([group]) => activeCategoryFilter === "all" || activeCategoryFilter === group)
+                  .map(([catGroup, items]) => {
+                    const CategoryIcon = getCategoryIcon(catGroup);
+                    return (
+                      <div key={catGroup} className="space-y-3">
+                        {/* Category Header */}
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                              <CategoryIcon className="h-4 w-4" />
+                            </div>
+                            <h3 className="text-sm font-bold text-white tracking-tight">{catGroup}</h3>
+                            <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-400 border border-slate-700">
+                              {items.length} {items.length === 1 ? "lead" : "leads"}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-500">Verified {location} records</span>
+                        </div>
+
+                        {/* Category Grid */}
+                        <div className="grid gap-3.5 md:grid-cols-2 lg:grid-cols-3">
+                          {items.map(({ company: c, originalIndex: i }) => {
+                            const isSelected = selectedIndices.has(i);
+                            return (
+                              <CompanyCard
+                                key={i}
+                                company={c}
+                                index={i}
+                                isSelected={isSelected}
+                                copiedIndex={copiedIndex}
+                                onSelect={() => toggleSelect(i)}
+                                onCopy={(e) => copyLead(c, i, e)}
+                                onClick={() => setActiveModalCompany(c)}
+                                getBadgeStyle={getCategoryBadgeStyle}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+
+            {/* VIEW MODE 2: Standard Grid View */}
+            {viewMode === "grid" && (
+              <div className="grid gap-3.5 md:grid-cols-2 lg:grid-cols-3">
+                {filteredResults.map((c, i) => {
+                  const isSelected = selectedIndices.has(i);
+                  return (
+                    <CompanyCard
+                      key={i}
+                      company={c}
+                      index={i}
+                      isSelected={isSelected}
+                      copiedIndex={copiedIndex}
+                      onSelect={() => toggleSelect(i)}
+                      onCopy={(e) => copyLead(c, i, e)}
+                      onClick={() => setActiveModalCompany(c)}
+                      getBadgeStyle={getCategoryBadgeStyle}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {/* VIEW MODE 3: Enterprise Data Table */}
             {viewMode === "table" && (
               <div className="glass-panel overflow-x-auto rounded-xl border border-white/10 shadow-lg">
                 <table className="w-full text-left text-xs text-slate-300">
@@ -712,16 +762,16 @@ function Index() {
                         />
                       </th>
                       <th className="p-3.5">Company Name</th>
-                      <th className="p-3.5">Category</th>
-                      <th className="p-3.5">Location / Address</th>
-                      <th className="p-3.5">Phone Number</th>
-                      <th className="p-3.5">Website</th>
-                      <th className="p-3.5">Rating</th>
+                      <th className="p-3.5">Industry Category</th>
+                      <th className="p-3.5">Location & Street Address</th>
+                      <th className="p-3.5">Contact Phone</th>
+                      <th className="p-3.5">Official Website</th>
+                      <th className="p-3.5">Google Rating</th>
                       <th className="p-3.5 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {results.map((c, i) => {
+                    {filteredResults.map((c, i) => {
                       const isSelected = selectedIndices.has(i);
                       return (
                         <tr
@@ -776,6 +826,9 @@ function Index() {
                               <div className="flex items-center gap-1 text-amber-400 font-medium">
                                 <Star className="h-3 w-3 fill-amber-400" />
                                 <span>{c.rating}</span>
+                                {c.reviewsCount != null && (
+                                  <span className="text-[10px] text-slate-500">({c.reviewsCount})</span>
+                                )}
                               </div>
                             ) : (
                               "Verified"
@@ -817,59 +870,15 @@ function Index() {
             <Building2 className="mx-auto h-10 w-10 text-slate-600" />
             <h3 className="mt-3 text-sm font-semibold text-white">No companies found for this query</h3>
             <p className="mt-1 text-xs text-slate-400 font-normal">
-              Try searching for a broader location or another industry keyword.
+              Try selecting another category or entering a major metropolitan city.
             </p>
           </div>
         )}
-
-        {/* Value Proposition / Bento Section */}
-        <div className="mt-20 border-t border-white/5 pt-12">
-          <div className="text-center">
-            <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-              Enterprise Data Standard
-            </h2>
-            <p className="mt-2 text-xs text-slate-400 max-w-lg mx-auto font-normal">
-              Why marketing, sales, and analytics teams rely on Company Scout for business prospecting.
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="glass-panel rounded-xl p-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-3.5">
-                <MapPin className="h-4 w-4" />
-              </div>
-              <h3 className="text-sm font-semibold text-white">Exact Geospatial Verification</h3>
-              <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-                Directly cross-referenced with Google Maps and OpenStreetMap geospatial registries to verify physical addresses.
-              </p>
-            </div>
-
-            <div className="glass-panel rounded-xl p-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 mb-3.5">
-                <ShieldCheck className="h-4 w-4" />
-              </div>
-              <h3 className="text-sm font-semibold text-white">Zero Fake Numbers & Dummy Domains</h3>
-              <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-                Every lead includes authentic local phone area codes, registered headquarters, and genuine corporate domains.
-              </p>
-            </div>
-
-            <div className="glass-panel rounded-xl p-5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-3.5">
-                <FileSpreadsheet className="h-4 w-4" />
-              </div>
-              <h3 className="text-sm font-semibold text-white">Instant CRM Integration</h3>
-              <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-                One-click export ready to load into Salesforce, HubSpot, Apollo, Google Sheets, and Excel lead pipelines.
-              </p>
-            </div>
-          </div>
-        </div>
       </main>
 
-      {/* Lead Inspector Modal / Drawer */}
+      {/* Lead Inspector Modal */}
       {activeModalCompany && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
           <div className="glass-panel-elevated relative w-full max-w-lg rounded-2xl p-6 shadow-2xl border border-white/15 animate-in fade-in zoom-in-95 duration-200">
             <button
               onClick={() => setActiveModalCompany(null)}
@@ -887,18 +896,23 @@ function Index() {
                   <h3 className="text-base font-bold text-white tracking-tight">{activeModalCompany.name}</h3>
                   <CheckCircle2 className="h-4 w-4 text-teal-400" />
                 </div>
-                <span className={`mt-1 inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase border ${getCategoryBadgeStyle(activeModalCompany.category)}`}>
-                  {activeModalCompany.category}
-                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`inline-block rounded px-2 py-0.5 text-[10px] font-semibold uppercase border ${getCategoryBadgeStyle(activeModalCompany.category)}`}>
+                    {activeModalCompany.category}
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    Group: {normalizeCategoryGroup(activeModalCompany.category)}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 space-y-3.5 text-xs">
-              <div className="rounded-xl bg-slate-900/60 p-3 border border-white/5 space-y-2.5">
+            <div className="mt-6 space-y-3 text-xs">
+              <div className="rounded-xl bg-slate-900/60 p-3.5 border border-white/5 space-y-2.5">
                 <div className="flex items-start gap-2.5 text-slate-300">
                   <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Address</div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Verified Address</div>
                     <div className="mt-0.5 leading-relaxed">{activeModalCompany.address || activeModalCompany.location}</div>
                   </div>
                 </div>
@@ -907,7 +921,7 @@ function Index() {
                   <div className="flex items-start gap-2.5 text-slate-300 pt-2 border-t border-white/5">
                     <Phone className="h-4 w-4 text-teal-400 shrink-0 mt-0.5" />
                     <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Phone Number</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Direct Phone</div>
                       <a href={`tel:${activeModalCompany.phone}`} className="mt-0.5 font-mono text-white hover:underline block">
                         {activeModalCompany.phone}
                       </a>
@@ -919,7 +933,7 @@ function Index() {
                   <div className="flex items-start gap-2.5 text-slate-300 pt-2 border-t border-white/5">
                     <Globe className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
                     <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Official Website</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Official Website</div>
                       <a
                         href={activeModalCompany.website}
                         target="_blank"
@@ -941,7 +955,7 @@ function Index() {
                     <span className="text-amber-400/80 text-[11px]">/ 5.0 Rating</span>
                   </div>
                   {activeModalCompany.reviewsCount != null && (
-                    <span className="text-[11px] font-medium">{activeModalCompany.reviewsCount} Google Reviews</span>
+                    <span className="text-[11px] font-medium">{activeModalCompany.reviewsCount} Verified Reviews</span>
                   )}
                 </div>
               )}
@@ -981,19 +995,153 @@ function Index() {
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-300">CompanyScout Intelligence</span>
             <span>—</span>
-            <span>Real-time B2B Geospatial Lead Platform</span>
+            <span>Category-Wise & Location-Accurate B2B Lead Platform</span>
           </div>
           <div className="flex items-center gap-4 text-slate-400">
             <a href="https://github.com/jahirirfan-2005/company-finder" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">
               GitHub
             </a>
             <span>•</span>
-            <span>Verified Public Registry Data</span>
+            <span>Real Geospatial Public Data</span>
             <span>•</span>
             <span>© {new Date().getFullYear()}</span>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function CompanyCard({
+  company: c,
+  index: i,
+  isSelected,
+  copiedIndex,
+  onSelect,
+  onCopy,
+  onClick,
+  getBadgeStyle,
+}: {
+  company: Company;
+  index: number;
+  isSelected: boolean;
+  copiedIndex: number | null;
+  onSelect: () => void;
+  onCopy: (e: React.MouseEvent) => void;
+  onClick: () => void;
+  getBadgeStyle: (cat: string) => string;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={`glass-panel group relative flex flex-col justify-between rounded-xl p-4 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:border-blue-500/50 ${
+        isSelected ? "border-blue-500/60 bg-blue-950/20" : ""
+      }`}
+    >
+      <div>
+        <div className="flex items-start justify-between gap-2.5">
+          <div className="flex items-start gap-2.5">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onSelect}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-1 h-3.5 w-3.5 rounded accent-blue-600 cursor-pointer"
+            />
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors tracking-tight leading-snug">
+                  {c.name}
+                </h3>
+                <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 shrink-0" />
+              </div>
+              {c.category && (
+                <span className={`mt-1.5 inline-block rounded-md px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase border ${getBadgeStyle(c.category)}`}>
+                  {c.category}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={onCopy}
+            title="Copy lead dossier"
+            className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+          >
+            {copiedIndex === i ? (
+              <Check className="h-3.5 w-3.5 text-teal-400" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+
+        {/* Address */}
+        <div className="mt-3 flex items-start gap-2 text-xs text-slate-400 font-normal">
+          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
+          <span className="line-clamp-2 leading-relaxed">{c.address || c.location}</span>
+        </div>
+
+        {/* Phone */}
+        {c.phone && (
+          <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-300 font-normal">
+            <Phone className="h-3.5 w-3.5 shrink-0 text-teal-400" />
+            <a
+              href={`tel:${c.phone}`}
+              onClick={(e) => e.stopPropagation()}
+              className="hover:underline hover:text-white font-mono text-[11px]"
+            >
+              {c.phone}
+            </a>
+          </div>
+        )}
+
+        {/* Website */}
+        {c.website && (
+          <div className="mt-1.5 flex items-center gap-2 text-xs text-blue-400 font-medium">
+            <Globe className="h-3.5 w-3.5 shrink-0 text-blue-400" />
+            <a
+              href={c.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="truncate hover:underline"
+            >
+              {c.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+            </a>
+          </div>
+        )}
+      </div>
+
+      {/* Card Footer */}
+      <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-2.5 text-xs">
+        <div className="flex items-center gap-1.5">
+          {c.rating != null ? (
+            <>
+              <div className="flex items-center text-amber-400">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                <span className="ml-1 font-semibold text-slate-200">{c.rating}</span>
+              </div>
+              {c.reviewsCount != null && (
+                <span className="text-slate-500 text-[11px]">({c.reviewsCount})</span>
+              )}
+            </>
+          ) : (
+            <span className="text-slate-500 text-[11px]">Verified Location</span>
+          )}
+        </div>
+
+        <a
+          href={c.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1 font-medium text-xs text-teal-400 hover:text-teal-300 transition-colors"
+        >
+          <span>Maps</span>
+          <ArrowUpRight className="h-3 w-3" />
+        </a>
+      </div>
     </div>
   );
 }

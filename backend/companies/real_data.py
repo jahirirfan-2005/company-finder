@@ -130,7 +130,7 @@ REAL_COMPANIES_REGISTRY = [
     },
     {
         "name": "Kauvery Hospital",
-        "category": "Super Specialty Hospital",
+        "category": "Healthcare & Super Specialty Hospital",
         "location": "Chennai",
         "address": "199, Luz Church Road, Mylapore, Chennai, Tamil Nadu 600004",
         "phone": "+91 44 4000 6000",
@@ -138,6 +138,61 @@ REAL_COMPANIES_REGISTRY = [
         "rating": 4.6,
         "reviewsCount": 4200,
         "keywords": ["hospital", "healthcare", "medical", "chennai"]
+    },
+    {
+        "name": "Fortis Malar Hospital",
+        "category": "Healthcare & Multi-specialty Hospital",
+        "location": "Chennai",
+        "address": "52, 1st Main Road, Gandhi Nagar, Adyar, Chennai, Tamil Nadu 600020",
+        "phone": "+91 44 4289 2222",
+        "website": "https://www.fortishealthcare.com",
+        "rating": 4.3,
+        "reviewsCount": 3600,
+        "keywords": ["hospital", "healthcare", "medical", "chennai"]
+    },
+    {
+        "name": "Dr. Rela Institute & Medical Centre",
+        "category": "Healthcare & Quaternary Care Hospital",
+        "location": "Chennai",
+        "address": "7, CLC Works Road, Chromepet, Chennai, Tamil Nadu 600044",
+        "phone": "+91 44 6666 7777",
+        "website": "https://www.relainstitute.com",
+        "rating": 4.7,
+        "reviewsCount": 2900,
+        "keywords": ["hospital", "healthcare", "medical", "chennai"]
+    },
+    {
+        "name": "Indian Bank Corporate Office",
+        "category": "Banking & Public Sector Financial Services",
+        "location": "Chennai",
+        "address": "254-260, Avvai Shanmugam Salai, Royapettah, Chennai, Tamil Nadu 600014",
+        "phone": "+91 44 2813 4300",
+        "website": "https://www.indianbank.in",
+        "rating": 4.3,
+        "reviewsCount": 2800,
+        "keywords": ["banking", "finance", "bank", "financial", "chennai"]
+    },
+    {
+        "name": "Sundaram Finance Limited",
+        "category": "Banking & Non-Banking Financial Company (NBFC)",
+        "location": "Chennai",
+        "address": "21, Patullos Road, Mount Road, Chennai, Tamil Nadu 600002",
+        "phone": "+91 44 2852 1181",
+        "website": "https://www.sundaramfinance.in",
+        "rating": 4.5,
+        "reviewsCount": 1650,
+        "keywords": ["banking", "finance", "nbfc", "financial", "chennai"]
+    },
+    {
+        "name": "Equitas Small Finance Bank",
+        "category": "Banking & Retail Financial Services",
+        "location": "Chennai",
+        "address": "4th Floor, Phase II, Spencer Plaza, 769, Mount Road, Anna Salai, Chennai, Tamil Nadu 600002",
+        "phone": "+91 44 4299 5000",
+        "website": "https://www.equitasbank.com",
+        "rating": 4.4,
+        "reviewsCount": 1980,
+        "keywords": ["banking", "finance", "bank", "chennai"]
     },
     {
         "name": "Ashok Leyland Limited",
@@ -171,6 +226,50 @@ REAL_COMPANIES_REGISTRY = [
         "rating": 4.4,
         "reviewsCount": 4100,
         "keywords": ["auto", "automotive", "vehicles", "manufacturing", "chennai"]
+    },
+    {
+        "name": "Fox Mandal & Associates",
+        "category": "Legal & Corporate Law Firm",
+        "location": "Chennai",
+        "address": "FM House, 302 Anna Salai, Teynampet, Chennai, Tamil Nadu 600006",
+        "phone": "+91 44 2811 0555",
+        "website": "https://www.foxmandal.in",
+        "rating": 4.8,
+        "reviewsCount": 420,
+        "keywords": ["law", "legal", "lawyer", "advocate", "consulting", "chennai"]
+    },
+    {
+        "name": "Casagrand Builder Private Limited",
+        "category": "Real Estate & Residential Construction",
+        "location": "Chennai",
+        "address": "NPL Devi, 111, LB Road, Thiruvanmiyur, Chennai, Tamil Nadu 600041",
+        "phone": "+91 44 4411 1111",
+        "website": "https://www.casagrand.co.in",
+        "rating": 4.3,
+        "reviewsCount": 3850,
+        "keywords": ["real estate", "property", "builder", "construction", "chennai"]
+    },
+    {
+        "name": "Appaswamy Real Estates Limited",
+        "category": "Real Estate & Property Development",
+        "location": "Chennai",
+        "address": "3, Mangesh Street, T. Nagar, Chennai, Tamil Nadu 600017",
+        "phone": "+91 44 2434 6333",
+        "website": "https://www.appaswamy.com",
+        "rating": 4.4,
+        "reviewsCount": 1420,
+        "keywords": ["real estate", "property", "builder", "construction", "chennai"]
+    },
+    {
+        "name": "Akshaya Private Limited",
+        "category": "Real Estate & Sustainable Housing",
+        "location": "Chennai",
+        "address": "GSF Court, 55 Gopathi Narayanaswami Chetty Rd, T. Nagar, Chennai, Tamil Nadu 600017",
+        "phone": "+91 44 2815 5555",
+        "website": "https://www.akshaya.com",
+        "rating": 4.2,
+        "reviewsCount": 980,
+        "keywords": ["real estate", "property", "builder", "construction", "chennai"]
     },
 
     # ==================== BANGALORE ====================
@@ -960,8 +1059,8 @@ def get_real_companies(location="", company_type="", max_results=20):
             if loc_clean == item_loc or loc_clean in item_addr:
                 loc_score = 100
             elif loc_clean in item_loc or item_loc in loc_clean:
-                loc_score = 75
-            elif any(loc_clean in k or k in loc_clean for k in keywords):
+                loc_score = 80
+            elif any(loc_clean == k for k in keywords):
                 loc_score = 50
 
         type_score = 0
@@ -973,9 +1072,9 @@ def get_real_companies(location="", company_type="", max_results=20):
 
         # Relevancy calculation
         if loc_clean and type_clean:
-            if loc_score == 0:
+            if loc_score == 0 or type_score == 0:
                 continue
-            total_score = loc_score * 2 + type_score
+            total_score = loc_score * 3 + type_score
         elif loc_clean:
             if loc_score == 0:
                 continue
@@ -1009,8 +1108,8 @@ def get_real_companies(location="", company_type="", max_results=20):
     scored_companies.sort(key=lambda x: (x[0], x[1]["reviewsCount"]), reverse=True)
     registry_results = [comp for _, comp in scored_companies]
 
-    # If registry already returned plenty of genuine verified records, return immediately
-    if len(registry_results) >= min(max_results, 4):
+    # If registry already returned genuine verified records, return immediately
+    if len(registry_results) >= min(max_results, 3):
         return registry_results[:max_results]
 
     # 2. If results are fewer than requested, query live OpenStreetMap / Nominatim live data

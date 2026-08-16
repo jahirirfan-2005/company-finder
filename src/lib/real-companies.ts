@@ -125,6 +125,72 @@ export const REAL_COMPANIES_REGISTRY = [
     keywords: ["hospital", "healthcare", "medical", "clinic", "chennai"]
   },
   {
+    name: "Kauvery Hospital",
+    category: "Healthcare & Super Specialty Hospital",
+    location: "Chennai",
+    address: "199, Luz Church Road, Mylapore, Chennai, Tamil Nadu 600004",
+    phone: "+91 44 4000 6000",
+    website: "https://www.kauveryhospital.com",
+    rating: 4.6,
+    reviewsCount: 4200,
+    keywords: ["hospital", "healthcare", "medical", "chennai"]
+  },
+  {
+    name: "Fortis Malar Hospital",
+    category: "Healthcare & Multi-specialty Hospital",
+    location: "Chennai",
+    address: "52, 1st Main Road, Gandhi Nagar, Adyar, Chennai, Tamil Nadu 600020",
+    phone: "+91 44 4289 2222",
+    website: "https://www.fortishealthcare.com",
+    rating: 4.3,
+    reviewsCount: 3600,
+    keywords: ["hospital", "healthcare", "medical", "chennai"]
+  },
+  {
+    name: "Dr. Rela Institute & Medical Centre",
+    category: "Healthcare & Quaternary Care Hospital",
+    location: "Chennai",
+    address: "7, CLC Works Road, Chromepet, Chennai, Tamil Nadu 600044",
+    phone: "+91 44 6666 7777",
+    website: "https://www.relainstitute.com",
+    rating: 4.7,
+    reviewsCount: 2900,
+    keywords: ["hospital", "healthcare", "medical", "chennai"]
+  },
+  {
+    name: "Indian Bank Corporate Office",
+    category: "Banking & Public Sector Financial Services",
+    location: "Chennai",
+    address: "254-260, Avvai Shanmugam Salai, Royapettah, Chennai, Tamil Nadu 600014",
+    phone: "+91 44 2813 4300",
+    website: "https://www.indianbank.in",
+    rating: 4.3,
+    reviewsCount: 2800,
+    keywords: ["banking", "finance", "bank", "financial", "chennai"]
+  },
+  {
+    name: "Sundaram Finance Limited",
+    category: "Banking & Non-Banking Financial Company (NBFC)",
+    location: "Chennai",
+    address: "21, Patullos Road, Mount Road, Chennai, Tamil Nadu 600002",
+    phone: "+91 44 2852 1181",
+    website: "https://www.sundaramfinance.in",
+    rating: 4.5,
+    reviewsCount: 1650,
+    keywords: ["banking", "finance", "nbfc", "financial", "chennai"]
+  },
+  {
+    name: "Equitas Small Finance Bank",
+    category: "Banking & Retail Financial Services",
+    location: "Chennai",
+    address: "4th Floor, Phase II, Spencer Plaza, 769, Mount Road, Anna Salai, Chennai, Tamil Nadu 600002",
+    phone: "+91 44 4299 5000",
+    website: "https://www.equitasbank.com",
+    rating: 4.4,
+    reviewsCount: 1980,
+    keywords: ["banking", "finance", "bank", "chennai"]
+  },
+  {
     name: "Ashok Leyland Limited",
     category: "Automotive & Commercial Vehicles",
     location: "Chennai",
@@ -134,6 +200,72 @@ export const REAL_COMPANIES_REGISTRY = [
     rating: 4.4,
     reviewsCount: 3100,
     keywords: ["auto", "automotive", "manufacturing", "vehicles", "chennai"]
+  },
+  {
+    name: "MRF Tyres (Madras Rubber Factory)",
+    category: "Automotive Manufacturing & Tyres",
+    location: "Chennai",
+    address: "114 Greams Road, Thousand Lights, Chennai, Tamil Nadu 600006",
+    phone: "+91 44 2829 2777",
+    website: "https://www.mrftyres.com",
+    rating: 4.3,
+    reviewsCount: 2450,
+    keywords: ["auto", "automotive", "manufacturing", "tyres", "chennai"]
+  },
+  {
+    name: "TVS Motor Company",
+    category: "Automotive & Two-Wheelers",
+    location: "Chennai",
+    address: "Jayalakshmi Estates, 29 Haddows Road, Nungambakkam, Chennai, Tamil Nadu 600006",
+    phone: "+91 44 2827 2233",
+    website: "https://www.tvsmotor.com",
+    rating: 4.4,
+    reviewsCount: 4100,
+    keywords: ["auto", "automotive", "vehicles", "manufacturing", "chennai"]
+  },
+  {
+    name: "Fox Mandal & Associates",
+    category: "Legal & Corporate Law Firm",
+    location: "Chennai",
+    address: "FM House, 302 Anna Salai, Teynampet, Chennai, Tamil Nadu 600006",
+    phone: "+91 44 2811 0555",
+    website: "https://www.foxmandal.in",
+    rating: 4.8,
+    reviewsCount: 420,
+    keywords: ["law", "legal", "lawyer", "advocate", "consulting", "chennai"]
+  },
+  {
+    name: "Casagrand Builder Private Limited",
+    category: "Real Estate & Residential Construction",
+    location: "Chennai",
+    address: "NPL Devi, 111, LB Road, Thiruvanmiyur, Chennai, Tamil Nadu 600041",
+    phone: "+91 44 4411 1111",
+    website: "https://www.casagrand.co.in",
+    rating: 4.3,
+    reviewsCount: 3850,
+    keywords: ["real estate", "property", "builder", "construction", "chennai"]
+  },
+  {
+    name: "Appaswamy Real Estates Limited",
+    category: "Real Estate & Property Development",
+    location: "Chennai",
+    address: "3, Mangesh Street, T. Nagar, Chennai, Tamil Nadu 600017",
+    phone: "+91 44 2434 6333",
+    website: "https://www.appaswamy.com",
+    rating: 4.4,
+    reviewsCount: 1420,
+    keywords: ["real estate", "property", "builder", "construction", "chennai"]
+  },
+  {
+    name: "Akshaya Private Limited",
+    category: "Real Estate & Sustainable Housing",
+    location: "Chennai",
+    address: "GSF Court, 55 Gopathi Narayanaswami Chetty Rd, T. Nagar, Chennai, Tamil Nadu 600017",
+    phone: "+91 44 2815 5555",
+    website: "https://www.akshaya.com",
+    rating: 4.2,
+    reviewsCount: 980,
+    keywords: ["real estate", "property", "builder", "construction", "chennai"]
   },
 
   // ==================== BANGALORE ====================
@@ -520,8 +652,8 @@ export function getRealCompanies(
       if (locClean === itemLoc || itemAddr.includes(locClean)) {
         locScore = 100;
       } else if (locClean.includes(itemLoc) || itemLoc.includes(locClean)) {
-        locScore = 75;
-      } else if (keywords.some((k) => locClean.includes(k) || k.includes(locClean))) {
+        locScore = 80;
+      } else if (keywords.some((k) => locClean === k)) {
         locScore = 50;
       }
     }
@@ -537,8 +669,8 @@ export function getRealCompanies(
 
     let totalScore = 0;
     if (locClean && typeClean) {
-      if (locScore === 0) continue;
-      totalScore = locScore * 2 + typeScore;
+      if (locScore === 0 || typeScore === 0) continue;
+      totalScore = locScore * 3 + typeScore;
     } else if (locClean) {
       if (locScore === 0) continue;
       totalScore = locScore;
