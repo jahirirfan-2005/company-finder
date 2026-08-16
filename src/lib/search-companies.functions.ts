@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRealCompanies, type Company } from "./real-companies";
+import { getRealCompanies, fetchLiveNominatimCompanies, type Company } from "./real-companies";
 
 export type { Company };
 
@@ -116,10 +116,26 @@ export const searchCompanies = createServerFn({ method: "POST" })
           }
         }
       } catch (err) {
-        console.warn("Direct Apify call failed, falling back to intelligent generator:", err);
+        console.warn("Direct Apify call failed, falling back to verified real registry:", err);
       }
     }
 
     // 3. Verified real company intelligence registry
-    return getRealCompanies(data.location, data.companyType, data.maxResults);
+    const registryResults = getRealCompanies(data.location, data.companyType, data.maxResults);
+    if (registryResults.length < data.maxResults && (data.location || data.companyType)) {
+      const liveResults = await fetchLiveNominatimCompanies(
+        data.location,
+        data.companyType,
+        data.maxResults - registryResults.length
+      );
+      const seen = new Set(registryResults.map((c) => c.name.toLowerCase()));
+      for (const item of liveResults) {
+        if (!seen.has(item.name.toLowerCase())) {
+          seen.add(item.name.toLowerCase());
+          registryResults.push(item);
+        }
+        if (registryResults.length >= data.maxResults) break;
+      }
+    }
+    return registryResults.slice(0, data.maxResults);
   });
