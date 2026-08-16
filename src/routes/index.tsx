@@ -177,9 +177,6 @@ function Index() {
       {/* Ambient background glows */}
       <div className="ambient-glow -top-40 left-1/2 -translate-x-1/2 h-[500px] w-[700px] bg-blue-600/20" />
       <div className="ambient-glow top-[30%] -left-40 h-[400px] w-[500px] bg-indigo-600/15" />
-      <div className="ambient-glow top-[50%] -right-40 h-[450px] w-[550px] bg-teal-500/10" />
-
-<<<<<<< HEAD
       <div className="relative z-10 mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         {/* Header Badge */}
         <div className="flex justify-center">
@@ -196,26 +193,8 @@ function Index() {
             <span className="gradient-accent-text block">city by city.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-base text-slate-400 sm:text-lg">
-=======
-      <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-16 md:pt-24">
-        {/* Hero */}
-        <header className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            <Sparkles className="h-3.5 w-3.5 text-mint" />
-            Google Maps company intelligence
-          </span>
-          <h1 className="mt-6 text-4xl leading-[1.15] font-bold tracking-tight text-balance sm:text-5xl md:text-6xl">
-            Find every company,
-            <br />
-            <span className="inline-block bg-gradient-to-r from-primary to-mint bg-clip-text pb-1 text-transparent">
-              city by city.
-            </span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-pretty text-muted-foreground md:text-lg">
->>>>>>> e475c37f1d4f728302c58d49b733a08f434bc7ad
             Search by location, by category, or both — then export a clean lead list to CSV or Excel in one click.
           </p>
-
         </header>
 
         {/* Search Bar Container */}
