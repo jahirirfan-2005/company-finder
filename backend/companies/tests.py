@@ -109,20 +109,39 @@ class CompanyAPITest(TestCase):
         ]
         mock_post.return_value = mock_response
 
-        # Call the search view with a location/companyType combination NOT in cache
-        url = reverse('company-search')
-        data = {
-            "location": "Mumbai",
-            "companyType": "Restaurant",
-            "maxResults": 5
-        }
-        res = self.client.post(url, data, content_type="application/json")
+        # Call with APIFY_API_TOKEN set
+        with self.settings(APIFY_API_TOKEN="dummy-token"):
+            url = reverse('company-search')
+            data = {
+                "location": "Mumbai",
+                "companyType": "Restaurant",
+                "maxResults": 5
+            }
+            res = self.client.post(url, data, content_type="application/json")
 
-        self.assertEqual(res.status_code, 200)
-        json_data = res.json()
-        self.assertEqual(len(json_data), 1)
-        self.assertEqual(json_data[0]['name'], "Apify Real Food Spot")
-        self.assertEqual(json_data[0]['reviewsCount'], 120)
-        self.assertEqual(json_data[0]['totalScore'], 4.8)
-        self.assertEqual(json_data[0]['phone'], "+91 99999 88888")
-        self.assertEqual(json_data[0]['website'], "https://apifyrealfood.com")
+            self.assertEqual(res.status_code, 200)
+            json_data = res.json()
+            self.assertEqual(len(json_data), 1)
+            self.assertEqual(json_data[0]['name'], "Apify Real Food Spot")
+            self.assertEqual(json_data[0]['reviewsCount'], 120)
+            self.assertEqual(json_data[0]['totalScore'], 4.8)
+            self.assertEqual(json_data[0]['phone'], "+91 99999 88888")
+            self.assertEqual(json_data[0]['website'], "https://apifyrealfood.com")
+
+    def test_search_fallback_without_apify_token(self):
+        # Call the search view when APIFY_API_TOKEN is empty
+        with self.settings(APIFY_API_TOKEN=""):
+            url = reverse('company-search')
+            data = {
+                "location": "Delhi",
+                "companyType": "Marketing",
+                "maxResults": 4
+            }
+            res = self.client.post(url, data, content_type="application/json")
+
+            self.assertEqual(res.status_code, 200)
+            json_data = res.json()
+            self.assertEqual(len(json_data), 4)
+            self.assertTrue(any("Marketing" in c['name'] for c in json_data))
+            self.assertTrue(all("Delhi" in c['location'] or "Delhi" in c['address'] for c in json_data))
+
