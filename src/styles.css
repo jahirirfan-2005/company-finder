@@ -35,12 +35,12 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #090d16;
-  --foreground: #f1f5f9;
-  --card: rgba(15, 23, 42, 0.65);
-  --card-foreground: #f1f5f9;
-  --popover: #0f172a;
-  --popover-foreground: #f1f5f9;
+  --background: #080c15;
+  --foreground: #f8fafc;
+  --card: rgba(13, 20, 36, 0.75);
+  --card-foreground: #f8fafc;
+  --popover: #0d1424;
+  --popover-foreground: #f8fafc;
   --primary: #3b82f6;
   --primary-foreground: #ffffff;
   --secondary: #1e293b;
@@ -78,13 +78,29 @@
   }
 }
 
+/* Background grid pattern */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
 /* Glassmorphism & Visual Polish */
 .glass-panel {
   background: rgba(13, 20, 36, 0.72);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel-elevated {
+  background: rgba(17, 26, 46, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
 }
 
 .glass-input {
@@ -130,11 +146,11 @@
 
 @keyframes pulseGlow {
   0%, 100% {
-    opacity: 0.4;
+    opacity: 0.3;
     transform: scale(1);
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.6;
     transform: scale(1.05);
   }
 }
@@ -146,4 +162,20 @@
   pointer-events: none;
   z-index: 0;
   animation: pulseGlow 8s ease-in-out infinite;
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
 }
